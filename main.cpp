@@ -49,10 +49,12 @@ int main(int argc, char *argv[])
     }
 
     inFormatCtx.dump();
+
+    // Correct output stream code tags before writing
+    outFormatCtx.clearCodecTags();
     outFormatCtx.dump();
 
     if (outFormatCtx.openFile() < 0) return -1;
-    qDebug() << "Here";
     if (outFormatCtx.writeHeader() < 0) return -2;
 
     AVPacket *packet = av_packet_alloc();
@@ -64,12 +66,14 @@ int main(int argc, char *argv[])
     while ((ret = inFormatCtx.read(packet)) >= 0){
         Sptr<QStream> inStream = inFormatCtx.getStream(packet->stream_index);
         Sptr<QStream> outStream = outFormatCtx.getStream(packet->stream_index);
-        if (!inStream || !outStream) continue;
-
-
-        av_packet_rescale_ts(packet,
-                             inStream->getTimeBase(),
-                             outStream->getTimeBase());
+        if (!inStream || !outStream) {
+            av_packet_unref(packet);
+            continue;
+        }
+        packet->pts = av_rescale_q_rnd(packet->pts, inStream->getTimeBase(), outStream->getTimeBase(), AV_ROUND_NEAR_INF);
+        packet->dts = av_rescale_q_rnd(packet->dts, inStream->getTimeBase(), outStream->getTimeBase(), AV_ROUND_NEAR_INF);
+        packet->duration = av_rescale_q(packet->duration, inStream->getTimeBase(), outStream->getTimeBase());
+        packet->pos = -1;
 
         ret = outFormatCtx.write(packet);
 

@@ -97,7 +97,9 @@ int QOFormatContext::addStream(Sptr<QStream> inStream, Sptr<QDecoder> decoder, S
         if (ret < 0) return ret;
 
         // IMPLEMENT CODEC TAG VERIFICATION
-        outStream->getCodecParameters()->codec_tag = 0;
+        qDebug() << "TAGS:" << getOutputCodecTags();
+//        outStream->getCodecParameters()->codec_tag = 0;
+//        data->oformat->codec_ta
     }
 
     return 0;
@@ -131,6 +133,43 @@ int QOFormatContext::writeHeader()
     return 0;
 }
 
+void QOFormatContext::clearCodecTags(int index)
+{
+    if (index == -1) {
+        for (Sptr<QStream> stream : streams){
+            if (!stream->getCodecParameters()) continue;
+            stream->getCodecParameters()->codec_tag = 0;
+        }
+    } else {
+        for (Sptr<QStream> stream : streams){
+            if (!stream->getCodecParameters()) continue;
+            if (stream->getIndex() == index) {
+                stream->getCodecParameters()->codec_tag = 0;
+                break;
+            }
+        }
+    }
+}
+
+void QOFormatContext::correctCodecTags()
+{
+    if (!streams.count()) return;
+
+    QHash<AVCodecID, unsigned int> codecTags = getOutputCodecTags();
+
+    for (Sptr<QStream> stream : streams){
+        if (!stream->getCodecParameters()) continue;
+
+        AVCodecID codecID = stream->getCodecParameters()->codec_id;
+        unsigned int codecTag = stream->getCodecParameters()->codec_tag;
+
+        unsigned int formatCodecTag = codecTags.value(codecID);
+        if ( formatCodecTag != codecTag){
+            stream->getCodecParameters()->codec_tag = formatCodecTag;
+        }
+    }
+}
+
 int QOFormatContext::write(AVPacket *packet)
 {
     return av_interleaved_write_frame(data, packet);
@@ -139,6 +178,26 @@ int QOFormatContext::write(AVPacket *packet)
 int QOFormatContext::writeTrailer()
 {
     return av_write_trailer(data);
+}
+
+QHash<AVCodecID, unsigned int> QOFormatContext::getOutputCodecTags() const
+{
+    QHash<AVCodecID, unsigned int> codecTags;
+
+    if (!data->oformat) return codecTags;
+    if (!data->oformat->codec_tag) return codecTags;
+
+    int i = 1;
+    const AVCodecTag *codecTag = data->oformat->codec_tag[0];
+    while (true){
+        qDebug() << codecTag->id << codecTag->tag;
+        codecTags.insert(codecTag->id, codecTag->tag);
+        codecTag = data->oformat->codec_tag[i];
+        if (!codecTag) break;
+        i++;
+    }
+
+    return codecTags;
 }
 
 void QOFormatContext::dump()

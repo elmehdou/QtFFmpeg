@@ -21,11 +21,17 @@ public:
 
     int writeHeader();
 
+    void clearCodecTags(int index = -1);
+    void correctCodecTags();
+
     int write(AVPacket *packet);
 
     int writeTrailer();
 
     void dump() override;
+
+    // SETTERS - GETTERS
+    QHash<AVCodecID, unsigned int> getOutputCodecTags() const;
 };
 
 #endif // QOFORMATCONTEXT_H

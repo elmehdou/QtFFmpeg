@@ -7,6 +7,11 @@
 
 #include "qstream.h"
 
+typedef struct AVCodecTag {
+    enum AVCodecID id;
+    unsigned int tag;
+} AVCodecTag;
+
 class QFormatContext : public QObject
 {
     Q_OBJECT
