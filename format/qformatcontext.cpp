@@ -3,6 +3,7 @@
 QFormatContext::QFormatContext(const QString &filename): QObject()
   , filename(filename)
   , data(nullptr)
+  , streams()
 {
 
 }

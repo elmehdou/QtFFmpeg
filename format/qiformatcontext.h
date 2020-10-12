@@ -14,6 +14,8 @@ public:
     int openInput(AVInputFormat *inputFormat = nullptr, AVDictionary **options = nullptr);
 
     int findStreamInfo(AVDictionary **options = nullptr);
+
+    void dump() override;
 };
 
 #endif // QIFORMATCONTEXT_H

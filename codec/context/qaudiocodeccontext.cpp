@@ -10,6 +10,18 @@ QAudioCodecContext::QAudioCodecContext(AVCodecParameters *parameters): QCodecCon
 
 }
 
+int QAudioCodecContext::copyParameters(Sptr<QAudioCodecContext> context)
+{
+    if (!context) return -1;
+
+    setSampleRate(context->getSampleRate());
+    setChannelLayout(context->getChannelLayout());
+    setChannels(av_get_channel_layout_nb_channels(getChannelLayout()));
+    setTimeBase(1, getSampleRate());
+
+    return 0;
+}
+
 int QAudioCodecContext::getSampleRate() const
 {
     if (!data) return 0;

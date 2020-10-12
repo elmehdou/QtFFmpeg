@@ -6,6 +6,34 @@ QStream::QStream(AVStream *stream) : QObject()
 
 }
 
+int QStream::copyParameters(AVStream *stream)
+{
+    if (!stream) return -1;
+
+    return avcodec_parameters_copy(data->codecpar, stream->codecpar);
+}
+
+int QStream::copyParameters(Sptr<QStream> stream)
+{
+    if (!stream) return -1;
+
+    return copyParameters(stream->getData());
+}
+
+int QStream::copyParameters(AVCodecContext *context)
+{
+    if (!context) return -1;
+
+    return avcodec_parameters_from_context(data->codecpar, context);
+}
+
+int QStream::copyParameters(Sptr<QCodecContext> context)
+{
+    if (!context) return -1;
+
+    return copyParameters(context->getData());
+}
+
 AVStream *QStream::getData() const
 {
     return data;

@@ -1,6 +1,8 @@
 #ifndef QCODECCONTEXT_H
 #define QCODECCONTEXT_H
 
+class QCodecContext;
+
 #include <QObject>
 
 #include <ffmpeg.h>

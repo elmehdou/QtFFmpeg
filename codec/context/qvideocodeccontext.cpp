@@ -10,6 +10,33 @@ QVideoCodecContext::QVideoCodecContext(AVCodecParameters *parameters): QCodecCon
 
 }
 
+int QVideoCodecContext::copyParameters(Sptr<QVideoCodecContext> context)
+{
+    if (!context) return -1;
+
+    setWidth(context->getWidth());
+    setHeight(context->getHeight());
+    setSampleAspectRation(context->getSampleAspectRatio());
+    setPixelFormat(context->getPixelFormat());
+    setTimeBase(av_inv_q(context->getFramerate()));
+
+    return 0;
+}
+
+void QVideoCodecContext::guessFramerate(AVFormatContext *formatContext, AVStream *stream)
+{
+    if (!formatContext || !stream) return;
+
+    setFramerate(av_guess_frame_rate(formatContext, stream, nullptr));
+}
+
+void QVideoCodecContext::guessFramerate(Sptr<QIFormatContext> formatContext, Sptr<QStream> stream)
+{
+    if (!formatContext || !stream) return;
+
+    setFramerate(av_guess_frame_rate(formatContext->getData(), stream->getData(), nullptr));
+}
+
 AVRational QVideoCodecContext::getFramerate() const
 {
     if (!data) return AVRational{0,0};

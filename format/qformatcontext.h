@@ -17,6 +17,8 @@ public:
 
     virtual bool allocate() = 0;
 
+    virtual void dump() = 0;
+
     // SETTERS - GETTERS
     QString getFilename() const;
 

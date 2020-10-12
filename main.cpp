@@ -2,6 +2,7 @@
 #include <QDebug>
 
 #include <format/qiformatcontext.h>
+#include <format/qoformatcontext.h>
 
 #include <codec/qdecoder.h>
 #include <codec/qaudiocodec.h>
@@ -15,36 +16,42 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // INPUT - Streams are found at contrsuction of the object
-    QIFormatContext inFormatCtx("C:/Users/ElMehDou/Downloads/test.mp4");
+    QIFormatContext inFormatCtx("C:/Users/ElMehDou/Downloads/01.mkv");
 
-    // Find decoders
+    QOFormatContext outFormatCtx("C:/Users/ElMehDou/Downloads/test.mkv");
+    outFormatCtx.allocate();
+
+    // Find decoders and add streams to output
     QList<Sptr<QDecoder>> decoders;
     for (Sptr<QStream> stream : inFormatCtx.getStreams()){
+
         Sptr<QDecoder> decoder = Sptr<QDecoder>::create(stream);
         decoders << decoder;
 
         Sptr<QVideoCodec> videoCodec = decoder->getCodec().dynamicCast<QVideoCodec>();
         Sptr<QVideoCodecContext> videoCodecCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
         if (videoCodec && videoCodecCtx){
-            qDebug() << "[ Video decoder ]";
-            qDebug() << videoCodec->getName();
-            qDebug() << videoCodec->getTags();
-            qDebug() << videoCodec->getPixelFormats();
-            qDebug() << videoCodecCtx->getPixelFormat();
-            continue;
+            videoCodecCtx->guessFramerate(inFormatCtx.getData(), stream->getData());
         }
 
         Sptr<QAudioCodec> audioCodec = decoder->getCodec().dynamicCast<QAudioCodec>();
         Sptr<QAudioCodecContext> audioCodecCtx = decoder->getContext().dynamicCast<QAudioCodecContext>();
         if (audioCodec && audioCodecCtx){
-            qDebug() << "[ Audio decoder ]";
-            qDebug() << audioCodec->getName();
-            qDebug() << audioCodec->getTags();
-            qDebug() << audioCodec->getSampleFormats();
-            qDebug() << audioCodecCtx->getChannelLayout();
+        }
+
+        // Open decoder
+        if (decoder->open() < 0){
+            qDebug() << "Could not open decoder";
             continue;
         }
+
+        // Adding stream to muxer
+        outFormatCtx.addStream(stream, decoder);
     }
+
+    inFormatCtx.dump();
+    outFormatCtx.dump();
+
 
     return a.exec();
 }

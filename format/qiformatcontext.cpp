@@ -39,3 +39,8 @@ int QIFormatContext::findStreamInfo(AVDictionary **options)
 
     return ret;
 }
+
+void QIFormatContext::dump()
+{
+    av_dump_format(data, 0, nullptr, 0);
+}

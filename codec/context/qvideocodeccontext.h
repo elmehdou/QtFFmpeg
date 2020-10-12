@@ -3,6 +3,8 @@
 
 #include "qcodeccontext.h"
 
+#include <format/qiformatcontext.h>
+
 
 
 class QVideoCodecContext : public QCodecContext
@@ -11,6 +13,11 @@ class QVideoCodecContext : public QCodecContext
 public:
     QVideoCodecContext(AVCodecContext *context);
     QVideoCodecContext(AVCodecParameters *parameters);
+
+    int copyParameters(Sptr<QVideoCodecContext> context);
+
+    void guessFramerate(AVFormatContext *formatContext, AVStream *stream);
+    void guessFramerate(Sptr<QIFormatContext> formatContext, Sptr<QStream> stream);
 
     // SETTERS - GETTERS
     int getWidth() const;

@@ -12,6 +12,8 @@ public:
     QAudioCodecContext(AVCodecContext *context);
     QAudioCodecContext(AVCodecParameters *parameters);
 
+    int copyParameters(Sptr<QAudioCodecContext> context);
+
     // SETTERS - GETTERS
     int getSampleRate() const;
     void setSampleRate(int value);
