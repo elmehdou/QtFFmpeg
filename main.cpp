@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         Sptr<QVideoCodec> videoCodec = decoder->getCodec().dynamicCast<QVideoCodec>();
         Sptr<QVideoCodecContext> videoCodecCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
         if (videoCodec && videoCodecCtx){
-            qDebug() << "[ Video decoder ]";g
+            qDebug() << "[ Video decoder ]";
             qDebug() << videoCodec->getName();
             qDebug() << videoCodec->getTags();
             qDebug() << videoCodec->getPixelFormats();
