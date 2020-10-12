@@ -1,5 +1,6 @@
 #include "qcodeccontext.h"
 
+
 QCodecContext::QCodecContext(QObject *parent) : QObject(parent)
   , data(nullptr)
 {
@@ -15,12 +16,12 @@ QCodecContext::QCodecContext(AVCodecContext *context): QObject()
 QCodecContext::QCodecContext(AVCodecParameters *parameters): QObject()
   , data(nullptr)
 {
+
     if (parameters) {
         if (allocate()){
             int ret = copyParameters(parameters);
-            if (ret < 0) {
+            if (ret < 0)
                 clear();
-            }
         }
     }
 }
@@ -60,7 +61,7 @@ int QCodecContext::copyParameters(QStream *stream)
 
 int QCodecContext::copyParameters(AVCodecParameters *parameters)
 {
-    return avcodec_parameters_from_context(parameters, data);
+    return avcodec_parameters_to_context(data, parameters);
 }
 
 

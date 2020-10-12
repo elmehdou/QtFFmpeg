@@ -26,6 +26,8 @@ public:
 
     QList<Sptr<QStream>> getStreams() const;
 
+    Sptr<QStream> getStream(int index) const;
+
 protected:
     QString filename;
     AVFormatContext *data;

@@ -2,6 +2,8 @@
 #include "qcoder.h"
 #include "qvideocodec.h"
 
+#include <QDebug>
+
 #include <codec/context/qaudiocodeccontext.h>
 #include <codec/context/qvideocodeccontext.h>
 

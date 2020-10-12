@@ -6,8 +6,10 @@ QIFormatContext::QIFormatContext(const QString filename) : QFormatContext(filena
 
     if (openInput() < 0) return;
 
-    if (findStreamInfo() < 0)
+    if (findStreamInfo() < 0){
+
         clear();
+    }
 }
 
 bool QIFormatContext::allocate()
@@ -33,11 +35,17 @@ int QIFormatContext::findStreamInfo(AVDictionary **options)
     int ret = avformat_find_stream_info(data, options);
     if (ret >= 0) {
         for (unsigned int i = 0; i < data->nb_streams; i++){
-            streams << Sptr<QStream>::create(data->streams[i]);
+            Sptr<QStream> stream = Sptr<QStream>::create(data->streams[i]);
+            streams << stream;
         }
     }
 
     return ret;
+}
+
+int QIFormatContext::read(AVPacket *packet)
+{
+    return av_read_frame(data, packet);
 }
 
 void QIFormatContext::dump()

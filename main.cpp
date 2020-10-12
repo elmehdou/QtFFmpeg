@@ -16,17 +16,16 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // INPUT - Streams are found at contrsuction of the object
-    QIFormatContext inFormatCtx("C:/Users/ElMehDou/Downloads/01.mkv");
+    QIFormatContext inFormatCtx("C:/Users/ElMehDou/Downloads/test.mp4");
 
     QOFormatContext outFormatCtx("C:/Users/ElMehDou/Downloads/test.mkv");
-    outFormatCtx.allocate();
 
     // Find decoders and add streams to output
-    QList<Sptr<QDecoder>> decoders;
+    QHash<Sptr<QStream>, Sptr<QDecoder>> decodersHash;
     for (Sptr<QStream> stream : inFormatCtx.getStreams()){
 
         Sptr<QDecoder> decoder = Sptr<QDecoder>::create(stream);
-        decoders << decoder;
+        decodersHash.insert(stream, decoder);
 
         Sptr<QVideoCodec> videoCodec = decoder->getCodec().dynamicCast<QVideoCodec>();
         Sptr<QVideoCodecContext> videoCodecCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
@@ -52,6 +51,32 @@ int main(int argc, char *argv[])
     inFormatCtx.dump();
     outFormatCtx.dump();
 
+    if (outFormatCtx.openFile() < 0) return -1;
+    qDebug() << "Here";
+    if (outFormatCtx.writeHeader() < 0) return -2;
+
+    AVPacket *packet = av_packet_alloc();
+    if (!packet) return -3;
+    av_init_packet(packet);
+
+    // Transcoding loop
+    int ret = 0;
+    while ((ret = inFormatCtx.read(packet)) >= 0){
+        Sptr<QStream> inStream = inFormatCtx.getStream(packet->stream_index);
+        Sptr<QStream> outStream = outFormatCtx.getStream(packet->stream_index);
+        if (!inStream || !outStream) continue;
+
+
+        av_packet_rescale_ts(packet,
+                             inStream->getTimeBase(),
+                             outStream->getTimeBase());
+
+        ret = outFormatCtx.write(packet);
+
+        av_packet_unref(packet);
+    }
+
+    outFormatCtx.writeTrailer();
 
     return a.exec();
 }

@@ -15,6 +15,8 @@ public:
 
     int findStreamInfo(AVDictionary **options = nullptr);
 
+    int read(AVPacket *packet);
+
     void dump() override;
 };
 

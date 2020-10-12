@@ -30,6 +30,15 @@ QList<Sptr<QStream>> QFormatContext::getStreams() const
     return streams;
 }
 
+Sptr<QStream> QFormatContext::getStream(int index) const
+{
+    for (Sptr<QStream> stream : streams){
+        if (stream->getIndex() == index) return stream;
+    }
+
+    return nullptr;
+}
+
 QString QFormatContext::getFilename() const
 {
     return filename;

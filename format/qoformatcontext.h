@@ -11,12 +11,19 @@ class QOFormatContext : public QFormatContext
 {
 public:
     QOFormatContext(const QString filename);
+    ~QOFormatContext();
 
     bool allocate() override;
 
     int addStream(Sptr<QStream> inStream, Sptr<QDecoder> decoder, Sptr<QEncoder> encoder = nullptr);
 
-    int prepareOutputFile();
+    int openFile();
+
+    int writeHeader();
+
+    int write(AVPacket *packet);
+
+    int writeTrailer();
 
     void dump() override;
 };

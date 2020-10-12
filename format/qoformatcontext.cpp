@@ -9,7 +9,13 @@
 
 QOFormatContext::QOFormatContext(const QString filename) : QFormatContext(filename)
 {
+    allocate();
+}
 
+QOFormatContext::~QOFormatContext()
+{
+    if (data && !(data->oformat->flags & AVFMT_NOFILE))
+        avio_closep(&data->pb);
 }
 
 bool QOFormatContext::allocate()
@@ -89,12 +95,15 @@ int QOFormatContext::addStream(Sptr<QStream> inStream, Sptr<QDecoder> decoder, S
         // Copy input stream parameters to output stream
         ret = outStream->copyParameters(inStream);
         if (ret < 0) return ret;
+
+        // IMPLEMENT CODEC TAG VERIFICATION
+        outStream->getCodecParameters()->codec_tag = 0;
     }
 
     return 0;
 }
 
-int QOFormatContext::prepareOutputFile()
+int QOFormatContext::openFile()
 {
     int ret = 0;
 
@@ -107,14 +116,29 @@ int QOFormatContext::prepareOutputFile()
         }
     }
 
+    return 0;
+}
+
+int QOFormatContext::writeHeader()
+{
     // Write header to opened file
-    ret = avformat_write_header(data, NULL);
+    int ret = avformat_write_header(data, nullptr);
     if (ret < 0) {
-        qDebug() << "Error occurred when opening output file: " << filename;
+        qDebug() << "Error occurred when writing header to output file: " << filename;
         return ret;
     }
 
     return 0;
+}
+
+int QOFormatContext::write(AVPacket *packet)
+{
+    return av_interleaved_write_frame(data, packet);
+}
+
+int QOFormatContext::writeTrailer()
+{
+    return av_write_trailer(data);
 }
 
 void QOFormatContext::dump()

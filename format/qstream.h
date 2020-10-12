@@ -25,6 +25,12 @@ public:
 
     AVCodecParameters *getCodecParameters() const;
 
+    int getIndex();
+
+    AVRational getTimeBase() const;
+//    void setTimeBase(AVRational value);
+//    void setTimeBase(int numerator, int denominator);
+
 private:
     AVStream *data;
 };

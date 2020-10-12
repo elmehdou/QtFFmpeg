@@ -45,3 +45,17 @@ AVCodecParameters *QStream::getCodecParameters() const
 
     return data->codecpar;
 }
+
+int QStream::getIndex()
+{
+    if (!data) return -1;
+
+    return data->index;
+}
+
+AVRational QStream::getTimeBase() const
+{
+    if (!data) return AVRational{0,0};
+
+    return data->time_base;
+}
