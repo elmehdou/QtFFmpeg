@@ -1,12 +1,23 @@
 #include "qencoder.h"
 
-QEncoder::QEncoder(Sptr<QStream> stream) : QEncoder(stream->getData())
+QEncoder::QEncoder(AVStream *stream, AVCodecID codecID) : QCoder()
 {
+    initializeCoder(stream->codecpar, codecID);
 }
 
-QEncoder::QEncoder(AVStream *stream) : QCoder()
+QEncoder::QEncoder(AVStream *stream, const QString &codecName) : QCoder()
 {
-    initializeCoder(stream->codecpar, stream->codecpar->codec_id);
+    initializeCoder(stream->codecpar, codecName);
+}
+
+QEncoder::QEncoder(Sptr<QStream> stream, AVCodecID codecID) : QEncoder(stream->getData(), codecID)
+{
+
+}
+
+QEncoder::QEncoder(Sptr<QStream> stream, const QString &codecName) : QEncoder(stream->getData(), codecName)
+{
+
 }
 
 QEncoder::QEncoder(AVCodecParameters *parameters, AVCodecID codecID) : QCoder()

@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
 
     // Find decoders and add streams to output
     QHash<Sptr<QStream>, Sptr<QDecoder>> decodersHash;
+    QHash<Sptr<QStream>, Sptr<QEncoder>> encodersHash;
+
     for (Sptr<QStream> stream : inFormatCtx.getStreams()){
 
         Sptr<QDecoder> decoder = Sptr<QDecoder>::create(stream);
@@ -31,6 +33,9 @@ int main(int argc, char *argv[])
         Sptr<QVideoCodecContext> videoCodecCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
         if (videoCodec && videoCodecCtx){
             videoCodecCtx->guessFramerate(inFormatCtx.getData(), stream->getData());
+
+            // Settings encoders
+            Sptr<QEncoder> videoEncoder = Sptr<QEncoder>::create()
         }
 
         Sptr<QAudioCodec> audioCodec = decoder->getCodec().dynamicCast<QAudioCodec>();
@@ -49,6 +54,8 @@ int main(int argc, char *argv[])
     }
 
     inFormatCtx.dump();
+
+
 
     // Correct output stream code tags before writing
     outFormatCtx.clearCodecTags();
@@ -70,10 +77,10 @@ int main(int argc, char *argv[])
             av_packet_unref(packet);
             continue;
         }
-        packet->pts = av_rescale_q_rnd(packet->pts, inStream->getTimeBase(), outStream->getTimeBase(), AV_ROUND_NEAR_INF);
-        packet->dts = av_rescale_q_rnd(packet->dts, inStream->getTimeBase(), outStream->getTimeBase(), AV_ROUND_NEAR_INF);
-        packet->duration = av_rescale_q(packet->duration, inStream->getTimeBase(), outStream->getTimeBase());
-        packet->pos = -1;
+
+        av_packet_rescale_ts(packet,
+                             inStream->getTimeBase(),
+                             outStream->getTimeBase());
 
         ret = outFormatCtx.write(packet);
 

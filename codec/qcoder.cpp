@@ -26,6 +26,10 @@ Sptr<QCodecContext> QCoder::getContext() const
 
 void QCoder::initializeCoder(AVCodecParameters *parameters, AVCodecID codecID)
 {
+    if (!parameters) return;
+
+    if (codecID == AV_CODEC_ID_NONE) codecID = parameters->codec_id;
+
     switch (parameters->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         codec = Sptr<QVideoCodec>::create(findCoder(codecID));
@@ -38,12 +42,15 @@ void QCoder::initializeCoder(AVCodecParameters *parameters, AVCodecID codecID)
     default:
         codec = Sptr<QCodec>::create(findCoder(codecID));
         context = Sptr<QCodecContext>::create(parameters);
-        return;
     }
 }
 
 void QCoder::initializeCoder(AVCodecParameters *parameters, const QString &name)
 {
+    if (!parameters) return;
+
+    if (name.isEmpty()) return initializeCoder(parameters, parameters->codec_id);
+
     switch (parameters->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         codec = Sptr<QVideoCodec>::create(findCoder(name));
@@ -52,6 +59,7 @@ void QCoder::initializeCoder(AVCodecParameters *parameters, const QString &name)
     case AVMEDIA_TYPE_AUDIO:
         codec = Sptr<QAudioCodec>::create(findCoder(name)); return;
         context = Sptr<QAudioCodecContext>::create(parameters);
+        return;
     default:
         codec = Sptr<QCodec>::create(findCoder(name)); return;
         context = Sptr<QCodecContext>::create(parameters);

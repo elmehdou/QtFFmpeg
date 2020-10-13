@@ -9,10 +9,14 @@ class QEncoder : public QCoder
 {
     Q_OBJECT
 public:
-    QEncoder(AVStream *stream);
-    QEncoder(Sptr<QStream> stream);
-    QEncoder(AVCodecParameters* parameters, AVCodecID codecID);
-    QEncoder(AVCodecParameters* parameters, const QString &name);
+    QEncoder(AVStream *stream, AVCodecID codecID = AV_CODEC_ID_NONE);
+    QEncoder(AVStream *stream, const QString &codecName = QString());
+
+    QEncoder(Sptr<QStream> stream, AVCodecID codecID = AV_CODEC_ID_NONE);
+    QEncoder(Sptr<QStream> stream, const QString &codecName = QString());
+
+    QEncoder(AVCodecParameters* parameters, AVCodecID codecID = AV_CODEC_ID_NONE);
+    QEncoder(AVCodecParameters* parameters, const QString &codecName = QString());
 
 protected:
     AVCodec *findCoder(AVCodecID codecID) override;
