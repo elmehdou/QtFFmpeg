@@ -11,10 +11,15 @@ class QVideoCodecContext : public QCodecContext
 {
     Q_OBJECT
 public:
+    QVideoCodecContext(AVCodec *codec);
+    QVideoCodecContext(Sptr<QCodec> codec);
+
     QVideoCodecContext(AVCodecContext *context);
+
     QVideoCodecContext(AVCodecParameters *parameters);
 
-    int copyParameters(Sptr<QVideoCodecContext> context);
+    int copyContext(Sptr<QVideoCodecContext> context);
+    int copyContext(Sptr<QCodecContext> context) override;
 
     void guessFramerate(AVFormatContext *formatContext, AVStream *stream);
     void guessFramerate(Sptr<QIFormatContext> formatContext, Sptr<QStream> stream);

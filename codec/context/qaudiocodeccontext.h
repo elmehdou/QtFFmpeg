@@ -9,10 +9,15 @@ class QAudioCodecContext : public QCodecContext
 {
     Q_OBJECT
 public:
+    QAudioCodecContext(AVCodec *codec);
+    QAudioCodecContext(Sptr<QCodec> codec);
+
     QAudioCodecContext(AVCodecContext *context);
+
     QAudioCodecContext(AVCodecParameters *parameters);
 
-    int copyParameters(Sptr<QAudioCodecContext> context);
+    int copyContext(Sptr<QAudioCodecContext> context);
+    int copyContext(Sptr<QCodecContext> context) override;
 
     // SETTERS - GETTERS
     int getSampleRate() const;

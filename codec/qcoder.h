@@ -20,9 +20,6 @@ public:
     virtual AVCodec *findCoder(AVCodecID codecID) = 0;
     virtual AVCodec *findCoder(const QString &name) = 0;
 
-    void initializeCoder(AVCodecParameters *parameters, AVCodecID codecID);
-    void initializeCoder(AVCodecParameters *parameters, const QString &name);
-
     int open(AVDictionary **options = 0);
 
 protected:

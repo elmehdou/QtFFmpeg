@@ -29,13 +29,28 @@ int main(int argc, char *argv[])
         Sptr<QDecoder> decoder = Sptr<QDecoder>::create(stream);
         decodersHash.insert(stream, decoder);
 
+        // Open decoder
+        if (decoder->open() < 0){
+            qDebug() << "Could not open decoder";
+            continue;
+        }
+
         Sptr<QVideoCodec> videoCodec = decoder->getCodec().dynamicCast<QVideoCodec>();
         Sptr<QVideoCodecContext> videoCodecCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
         if (videoCodec && videoCodecCtx){
             videoCodecCtx->guessFramerate(inFormatCtx.getData(), stream->getData());
 
             // Settings encoders
-            Sptr<QEncoder> videoEncoder = Sptr<QEncoder>::create()
+            Sptr<QEncoder> videoEncoder = Sptr<QEncoder>::create("libx265");
+            if (videoEncoder->getCodec()){
+                encodersHash.insert(stream, videoEncoder);
+                videoEncoder->getContext()->copyContext(videoCodecCtx);
+                Sptr<QVideoCodec> videoEncoderCodec = videoEncoder->getCodec().dynamicCast<QVideoCodec>();
+
+                // Adding stream to muxer
+                outFormatCtx.addStream(stream, decoder, videoEncoder);
+                continue;
+            }
         }
 
         Sptr<QAudioCodec> audioCodec = decoder->getCodec().dynamicCast<QAudioCodec>();
@@ -43,19 +58,12 @@ int main(int argc, char *argv[])
         if (audioCodec && audioCodecCtx){
         }
 
-        // Open decoder
-        if (decoder->open() < 0){
-            qDebug() << "Could not open decoder";
-            continue;
-        }
 
         // Adding stream to muxer
         outFormatCtx.addStream(stream, decoder);
     }
 
     inFormatCtx.dump();
-
-
 
     // Correct output stream code tags before writing
     outFormatCtx.clearCodecTags();
@@ -71,6 +79,7 @@ int main(int argc, char *argv[])
     // Transcoding loop
     int ret = 0;
     while ((ret = inFormatCtx.read(packet)) >= 0){
+
         Sptr<QStream> inStream = inFormatCtx.getStream(packet->stream_index);
         Sptr<QStream> outStream = outFormatCtx.getStream(packet->stream_index);
         if (!inStream || !outStream) {
@@ -82,7 +91,27 @@ int main(int argc, char *argv[])
                              inStream->getTimeBase(),
                              outStream->getTimeBase());
 
-        ret = outFormatCtx.write(packet);
+        Sptr<QEncoder> encoder = encodersHash.value(inStream);
+        if (encoder){
+            Sptr<QDecoder> decoder = decodersHash.value(inStream);
+            if (!decoder) {
+                qDebug() << "No decoder found cannot rencode stream. Exiting.";
+                return -4;
+            }
+            ret = decoder->decode(packet, [&](AVFrame *frame){
+                encoder->encode(frame, [&](AVPacket *encodedPacket){
+                    outFormatCtx.write(encodedPacket);
+                });
+            });
+            if (ret < 0) break;
+
+        } else {
+            ret = outFormatCtx.write(packet);
+            if (ret < 0) {
+                qDebug() << "Could not write to output. Exiting.";
+                return -5;
+            }
+        }
 
         av_packet_unref(packet);
     }

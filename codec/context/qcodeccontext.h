@@ -16,17 +16,25 @@ class QCodecContext : public QObject
     Q_OBJECT
 public:
     QCodecContext(QObject *parent = nullptr);
+
+    QCodecContext(AVCodec *codec);
+    QCodecContext(Sptr<QCodec> codec);
+
     QCodecContext(AVCodecContext *context);
+
     QCodecContext(AVCodecParameters *parameters);
 
     ~QCodecContext();
     void clear();
 
+    bool allocate(AVCodec *codec);
     bool allocate(Sptr<QCodec> codec = nullptr);
 
-    int copyParameters(QStream *stream);
+    int copyParameters(Sptr<QStream> stream);
     int copyParameters(AVStream *stream);
     int copyParameters(AVCodecParameters *parameters);
+
+    virtual int copyContext(Sptr<QCodecContext> context);
 
     // SETTERS - GETTERS
     AVCodecContext *getData() const;

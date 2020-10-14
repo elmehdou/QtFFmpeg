@@ -17,6 +17,13 @@ AVCodec *QCodec::getData() const
     return data;
 }
 
+AVCodecID QCodec::getID()
+{
+    if (!data) return AV_CODEC_ID_NONE;
+
+    return data->id;
+}
+
 QString QCodec::getName() const
 {
     if (!data) return "";

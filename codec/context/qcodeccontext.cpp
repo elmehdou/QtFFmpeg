@@ -1,10 +1,26 @@
 #include "qcodeccontext.h"
 
+#include <QDebug>
 
 QCodecContext::QCodecContext(QObject *parent) : QObject(parent)
   , data(nullptr)
 {
     allocate();
+}
+
+QCodecContext::QCodecContext(AVCodec *codec) : QObject()
+  , data(nullptr)
+{
+    if (codec)
+        if (!allocate(codec))
+            clear();
+}
+
+QCodecContext::QCodecContext(Sptr<QCodec> codec)
+{
+    if (codec)
+        if (!allocate(codec->getData()))
+            clear();
 }
 
 QCodecContext::QCodecContext(AVCodecContext *context): QObject()
@@ -36,6 +52,14 @@ void QCodecContext::clear()
     if (data) avcodec_free_context(&data);
 }
 
+bool QCodecContext::allocate(AVCodec *codec)
+{
+    data = avcodec_alloc_context3(codec);
+    if (!data) return false;
+
+    return true;
+}
+
 bool QCodecContext::allocate(Sptr<QCodec> codec)
 {
     AVCodec *codecData = codec ? codec.data()->getData() : nullptr;
@@ -52,7 +76,7 @@ int QCodecContext::copyParameters(AVStream *stream)
     return -1;
 }
 
-int QCodecContext::copyParameters(QStream *stream)
+int QCodecContext::copyParameters(Sptr<QStream> stream)
 {
     if (stream) return copyParameters(stream->getData());
 
@@ -64,6 +88,26 @@ int QCodecContext::copyParameters(AVCodecParameters *parameters)
     return avcodec_parameters_to_context(data, parameters);
 }
 
+int QCodecContext::copyContext(Sptr<QCodecContext> context)
+{
+    AVCodecParameters *parameters = avcodec_parameters_alloc();
+    if (!parameters){
+        qDebug() << "Could not allocat codec parameters for copy";
+        return -1;
+    }
+
+    int ret = avcodec_parameters_from_context(parameters, context->getData());
+    if (ret < 0){
+        qDebug() << "Could not copy codec parameters.";
+        return ret;
+    }
+
+    ret = copyParameters(parameters);
+
+    avcodec_parameters_free(&parameters);
+
+    return ret;
+}
 
 // SETTERS - GETTERS
 AVCodecContext *QCodecContext::getData() const

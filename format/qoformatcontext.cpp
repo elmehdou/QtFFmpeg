@@ -55,25 +55,26 @@ int QOFormatContext::addStream(Sptr<QStream> inStream, Sptr<QDecoder> decoder, S
         Sptr<QCodec> encoderCodec = encoder->getCodec();
         Sptr<QCodecContext> encoderContext = encoder->getContext();
 
+        qDebug() << "ERRORS";
         if (decoder->getContext()->getType() == AVMEDIA_TYPE_VIDEO || decoder->getContext()->getType() == AVMEDIA_TYPE_AUDIO){
             if (decoder->getContext()->getType() == AVMEDIA_TYPE_VIDEO){
                 // Copy decoder context parameters into encoder one
                 Sptr<QVideoCodecContext> encoderVideoCtx = encoderContext.dynamicCast<QVideoCodecContext>();
-                Sptr<QVideoCodecContext> decoderVideoCtx = encoderContext.dynamicCast<QVideoCodecContext>();
-                ret = encoderVideoCtx->copyParameters(decoderVideoCtx);
+                Sptr<QVideoCodecContext> decoderVideoCtx = decoder->getContext().dynamicCast<QVideoCodecContext>();
+                ret = encoderVideoCtx->copyContext(decoderVideoCtx);
                 if (ret < 0) return ret;
 
                 // Check for codec pixel formats
                 Sptr<QVideoCodec> encoderVideoCodec = encoder->getCodec().dynamicCast<QVideoCodec>();
                 if (encoderVideoCodec)
                     if (encoderVideoCodec->getPixelFormats().count())
-                        encoderVideoCtx->setPixelFormat(encoderVideoCodec->getPixelFormats().at(0));
+                        encoderVideoCtx->setPixelFormat(encoderVideoCodec->getPixelFormats().last());
 
             } else {
                 // Copy decoder context parameters into encoder one
-                Sptr<QAudioCodecContext> encoderAudioCtx = encoder->getContext().dynamicCast<QAudioCodecContext>();
-                Sptr<QAudioCodecContext> decoderAudioCtx = decoder->getContext().dynamicCast<QAudioCodecContext>();
-                ret = encoderAudioCtx->copyParameters(decoderAudioCtx);
+                Sptr<QCodecContext> encoderAudioCtx = encoder->getContext();
+                Sptr<QCodecContext> decoderAudioCtx = decoder->getContext();
+                ret = encoderAudioCtx->copyContext(decoderAudioCtx);
                 if (ret < 0) return ret;
             }
 
@@ -83,8 +84,10 @@ int QOFormatContext::addStream(Sptr<QStream> inStream, Sptr<QDecoder> decoder, S
             }
 
             // Open encoder
-            ret = encoder->open();
-            if (ret < 0) return ret;
+            if (encoder->open() < 0){
+                qDebug() << "Could not open encoder";
+                return -1;
+            }
 
             // Copy encoder context parameters to output stream
             ret = outStream->copyParameters(encoderContext);
@@ -190,7 +193,6 @@ QHash<AVCodecID, unsigned int> QOFormatContext::getOutputCodecTags() const
     int i = 1;
     const AVCodecTag *codecTag = data->oformat->codec_tag[0];
     while (true){
-        qDebug() << codecTag->id << codecTag->tag;
         codecTags.insert(codecTag->id, codecTag->tag);
         codecTag = data->oformat->codec_tag[i];
         if (!codecTag) break;

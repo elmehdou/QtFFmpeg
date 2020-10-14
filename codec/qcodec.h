@@ -10,12 +10,15 @@ class QCodec : public QObject
     Q_OBJECT
 public:
     QCodec(QObject *parent = nullptr);
+
     QCodec(AVCodec *codec);
 
     void clear();
 
     // SETTERS - GETTERS
     AVCodec *getData() const;
+
+    AVCodecID getID();
 
     QString getName() const;
 

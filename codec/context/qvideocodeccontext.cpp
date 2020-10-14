@@ -1,5 +1,19 @@
 #include "qvideocodeccontext.h"
 
+#include <QDebug>
+
+#include <codec/qvideocodec.h>
+
+QVideoCodecContext::QVideoCodecContext(AVCodec *codec): QCodecContext(codec)
+{
+
+}
+
+QVideoCodecContext::QVideoCodecContext(Sptr<QCodec> codec): QCodecContext(codec)
+{
+
+}
+
 QVideoCodecContext::QVideoCodecContext(AVCodecContext *context): QCodecContext(context)
 {
 
@@ -10,15 +24,22 @@ QVideoCodecContext::QVideoCodecContext(AVCodecParameters *parameters): QCodecCon
 
 }
 
-int QVideoCodecContext::copyParameters(Sptr<QVideoCodecContext> context)
+int QVideoCodecContext::copyContext(Sptr<QVideoCodecContext> context)
+{
+    return copyContext(context.dynamicCast<QCodecContext>());
+}
+
+int QVideoCodecContext::copyContext(Sptr<QCodecContext> context)
 {
     if (!context) return -1;
 
-    setWidth(context->getWidth());
-    setHeight(context->getHeight());
-    setSampleAspectRation(context->getSampleAspectRatio());
-    setPixelFormat(context->getPixelFormat());
-    setTimeBase(av_inv_q(context->getFramerate()));
+    Sptr<QVideoCodecContext> videoContext = context.dynamicCast<QVideoCodecContext>();
+    if (videoContext) {
+        setWidth(videoContext->getWidth());
+        setHeight(videoContext->getHeight());
+        setSampleAspectRation(videoContext->getSampleAspectRatio());
+        setTimeBase(av_inv_q(videoContext->getFramerate()));
+    }
 
     return 0;
 }
@@ -104,5 +125,5 @@ void QVideoCodecContext::setPixelFormat(AVPixelFormat value)
 {
     if (!data) return;
 
-    data->height = value;
+    data->pix_fmt = value;
 }

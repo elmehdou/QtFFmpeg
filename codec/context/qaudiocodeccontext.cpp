@@ -1,5 +1,15 @@
 #include "qaudiocodeccontext.h"
 
+QAudioCodecContext::QAudioCodecContext(AVCodec *codec): QCodecContext(codec)
+{
+
+}
+
+QAudioCodecContext::QAudioCodecContext(Sptr<QCodec> codec): QCodecContext(codec)
+{
+
+}
+
 QAudioCodecContext::QAudioCodecContext(AVCodecContext *context): QCodecContext(context)
 {
 
@@ -10,14 +20,22 @@ QAudioCodecContext::QAudioCodecContext(AVCodecParameters *parameters): QCodecCon
 
 }
 
-int QAudioCodecContext::copyParameters(Sptr<QAudioCodecContext> context)
+int QAudioCodecContext::copyContext(Sptr<QAudioCodecContext> context)
+{
+    return copyContext(context.dynamicCast<QCodecContext>());
+}
+
+int QAudioCodecContext::copyContext(Sptr<QCodecContext> context)
 {
     if (!context) return -1;
 
-    setSampleRate(context->getSampleRate());
-    setChannelLayout(context->getChannelLayout());
-    setChannels(av_get_channel_layout_nb_channels(getChannelLayout()));
-    setTimeBase(1, getSampleRate());
+    Sptr<QAudioCodecContext> audioContext = context.dynamicCast<QAudioCodecContext>();
+    if (audioContext) {
+        setSampleRate(audioContext->getSampleRate());
+        setChannelLayout(audioContext->getChannelLayout());
+        setChannels(av_get_channel_layout_nb_channels(getChannelLayout()));
+        setTimeBase(1, getSampleRate());
+    }
 
     return 0;
 }

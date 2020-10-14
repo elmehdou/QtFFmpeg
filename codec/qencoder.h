@@ -2,21 +2,26 @@
 #define QENCODER_H
 
 #include <QObject>
+#include <functional>
 
 #include "qcoder.h"
+
+#include "qvideocodec.h"
+#include "qaudiocodec.h"
+#include <codec/context/qaudiocodeccontext.h>
+#include <codec/context/qvideocodeccontext.h>
 
 class QEncoder : public QCoder
 {
     Q_OBJECT
 public:
-    QEncoder(AVStream *stream, AVCodecID codecID = AV_CODEC_ID_NONE);
-    QEncoder(AVStream *stream, const QString &codecName = QString());
+    QEncoder(AVCodecID codecID = AV_CODEC_ID_NONE);
+    QEncoder(const QString &codecName = QString());
 
-    QEncoder(Sptr<QStream> stream, AVCodecID codecID = AV_CODEC_ID_NONE);
-    QEncoder(Sptr<QStream> stream, const QString &codecName = QString());
+    void initialize(AVCodecID codecID);
+    void initialize(const QString &name);
 
-    QEncoder(AVCodecParameters* parameters, AVCodecID codecID = AV_CODEC_ID_NONE);
-    QEncoder(AVCodecParameters* parameters, const QString &codecName = QString());
+    int encode(AVFrame *frame, std::function<void(AVPacket*)> onEncoded);
 
 protected:
     AVCodec *findCoder(AVCodecID codecID) override;
